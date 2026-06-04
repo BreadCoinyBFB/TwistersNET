@@ -1,5 +1,5 @@
 body {  
-  background: linear-gradient(to right, #ff4d00, #ffa500);
+  background: linear-gradient(to right, #222222, #696969);
   font-family: 'Roboto', Inter, sans-serif;
   text-align: center;
   margin: 0;
@@ -41,7 +41,7 @@ html {
 
 button {
   background-color: black;
-  border: 2px solid orange;
+  border: 2px solid white;
   color: white;
   padding: 10px;
   margin: 10px;
@@ -53,6 +53,6 @@ button {
 }
 
 button:hover {
-  background-color: orange;
+  background-color: white;
   color: black;
 }
