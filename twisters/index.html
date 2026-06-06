@@ -1,1 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twisters.NET</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
 
+    <!-- ================= GAME WORLD & SIMULATION ================= -->
+    <div id="game-screen" class="hidden">
+        <!-- The Actual Live 2D Game World Canvas -->
+        <canvas id="gameCanvas"></canvas>
+
+        <!-- Top Status Bar HUD (Matches image_2.png / image_4.png) -->
+        <div class="hud-top-bar">
+            <div class="hud-metric">
+                <span class="label">MPH:</span>
+                <span id="hud-speed" class="value">0.0 MPH</span>
+            </div>
+            <div class="hud-metric highlight-box">
+                <span class="value magenta-text">HIGH</span>
+                <span class="sub-value">CAPE: 4984</span>
+                <span class="sub-value green-text">Money: $5000</span>
+            </div>
+            <div class="hud-tabs">
+                <button onclick="togglePanel('radar-panel')">RADARS</button>
+                <button onclick="togglePanel('settings-panel')">SETTINGS</button>
+                <button onclick="togglePanel('vehicles-panel')" id="hud-veh-btn">VEHICLES</button>
+            </div>
+            <div class="hud-metric center-arrow">
+                <span class="label">You're Going:</span>
+                <div class="arrow" id="hud-arrow">→</div>
+            </div>
+            <div class="hud-metric toggle-box">
+                <span class="label">DEPLOYMENT:</span>
+                <div class="flex-row">
+                    <span id="deploy-status">OFF</span>
+                    <label class="switch">
+                        <input type="checkbox" id="deploy-toggle" onchange="toggleDeployment()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dynamic Warning/Location Ticker Panel (Bottom Left/Center concept) -->
+        <div class="hud-bottom-panel">
+            <div class="location-box" id="location-text">OKLAHOMA OUTSKIRTS</div>
+            <div class="eas-ticker-container">
+                <div class="eas-ticker" id="eas-text">... MONITORING RADAR FOR CONVECTIVE DEVELOPMENT ... SPC HAS ISSUED A HIGH RISK FOR THE AREA ...</div>
+            </div>
+            <button class="rate-btn" onclick="openRatingScreen()">Rate Tornado</button>
+        </div>
+    </div>
+
+    <!-- ================= MODULAR OVERLAY UI PANELS ================= -->
+
+    <!-- Radar Window (Matches image_5.png) -->
+    <div id="radar-panel" class="modal-panel hidden">
+        <div class="panel-header">RADAR LIVE FEED <span class="close-btn" onclick="closeAllPanels()">X</span></div>
+        <div class="radar-content">
+            <div class="radar-display">
+                <!-- Vector drawing replica of the concept radar scan -->
+                <div class="radar-cone"></div>
+                <div class="radar-storm"></div>
+                <div class="radar-player-dot"></div>
+                <div class="radar-grid-h"></div>
+                <div class="radar-grid-v"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vehicle Selection Window (Matches image_3.png) -->
+    <div id="vehicles-panel" class="modal-panel hidden">
+        <div class="panel-container-dark">
+            <h2>CATEGORY:</h2>
+            <ul class="panel-list">
+                <li onclick="selectVehicleClass('Dealership')">DEALERSHIP</li>
+                <li onclick="selectVehicleClass('Interceptor')">INTERCEPTOR</li>
+                <li onclick="selectVehicleClass('Probes')">PROBES</li>
+                <li onclick="selectVehicleClass('Custom')">MAKE YOUR OWN INTERCEPTOR</li>
+            </ul>
+            <button class="panel-back-btn" onclick="closeAllPanels()">&lt; BACK</button>
+        </div>
+    </div>
+
+    <!-- Settings Window (Matches image_7.png) -->
+    <div id="settings-panel" class="modal-panel hidden">
+        <div class="panel-container-dark settings-grid-layout">
+            <h2>SETTINGS:</h2>
+            <div class="settings-columns">
+                <div class="settings-col">
+                    <h3>VISUAL:</h3>
+                    <p class="setting-label">INGAME GRAPHICS</p>
+                    <button class="setting-toggle-btn" id="gfx-low" onclick="setGraphics('low')">LOW - OFF</button>
+                    <button class="setting-toggle-btn" id="gfx-med" onclick="setGraphics('medium')">MEDIUM - OFF</button>
+                    <button class="setting-toggle-btn active" id="gfx-high" onclick="setGraphics('high')">HIGH - ON</button>
+                    <br><br>
+                    <button class="setting-toggle-btn" id="mobile-toggle" onclick="toggleMobile()">MOBILE CONTROLS: OFF</button>
+                </div>
+                <div class="settings-col">
+                    <h3>AUDIO:</h3>
+                    <div class="audio-row">
+                        <span>BACKGROUND: <span id="val-bg">100</span></span>
+                        <button class="math-btn" onclick="adjustAudio('bg', 5)">+</button>
+                        <button class="math-btn" onclick="adjustAudio('bg', -5)">-</button>
+                    </div>
+                    <div class="audio-row">
+                        <span>SOUNDS: <span id="val-snd">100</span></span>
+                        <button class="math-btn" onclick="adjustAudio('snd', 5)">+</button>
+                        <button class="math-btn" onclick="adjustAudio('snd', -5)">-</button>
+                    </div>
+                </div>
+            </div>
+            <button class="panel-back-btn" onclick="closeAllPanels()">&lt; BACK</button>
+        </div>
+    </div>
+
+    <!-- NWS Rating Screen Panel (Matches image_6.png) -->
+    <div id="rating-panel" class="modal-panel hidden">
+        <div class="rating-box">
+            <div class="rating-row-big">
+                <span class="title-lbl">You Rated the Tornado:</span>
+                <span class="rating-value">EF3</span>
+            </div>
+            <div class="rating-row-small">
+                <span class="title-lbl">NWS:</span>
+                <span class="rating-value">EF2</span>
+            </div>
+            <button class="panel-back-btn" style="margin-top:40px;" onclick="closeAllPanels()">RETURN TO CHASE</button>
+        </div>
+    </div>
+
+
+    <!-- ================= MAIN MENU OVERLAY ================= -->
+    <!-- Matches your exact layout plan and typography from image.png -->
+    <div id="main-menu">
+        <!-- Panning background map effect -->
+        <div class="panning-menu-bg"></div>
+        <div class="menu-darkener"></div>
+
+        <div class="menu-ui-wrapper">
+            <!-- Branding Header -->
+            <div class="menu-branding">
+                <div class="logo-placeholder">
+                    <span class="tornado-icon">🌀</span> 
+                    <span class="logo-text">TWISTERS<span class="italic-net">Net</span></span>
+                </div>
+            </div>
+
+            <!-- Primary Actions Area -->
+            <div class="menu-main-interactive">
+                <div class="server-code-container">
+                    <input type="text" id="menuServerCode" placeholder="ENTER SERVER CODE..." value="X79-FPL">
+                </div>
+                
+                <nav class="menu-navigation-links">
+                    <button onclick="startGameDirectly()">Play</button>
+                    <button onclick="openMenuSettings()">Settings</button>
+                    <button onclick="alert('Twisters.NET - Simulated Atmospheric Chase Platform v0.1.0-Alpha')">About</button>
+                    <button onclick="alert('Vehicles menu can be customized directly once spawned near service hubs!')">Vehicles</button>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Decorative Info Overlays from image.png layout spec -->
+        <div class="menu-corner top-left-info">
+            <div class="magenta-text font-bold">SPC RISK: HIGH</div>
+            <div class="gray-text text-sm">CAPE: 4984 J/KG</div>
+        </div>
+        <div class="menu-corner top-right-info">
+            <div>DAY 1</div>
+            <div class="gray-text">13:03 CDT</div>
+        </div>
+        <div class="menu-caption-bottom">
+            TIP: Swapping vehicles is locked to localized service structures. Plan your positions accordingly.
+        </div>
+        <div class="menu-corner bottom-right-author">
+            CoinifyBCB
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+  </html>
+  
